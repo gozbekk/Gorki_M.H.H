@@ -651,14 +651,45 @@ document.getElementById('fileInput').addEventListener('change',function(e){
   r.onload=function(ev){
     try{
       const wb=XLSX.read(ev.target.result,{type:'array'});
-      const s2rows=wb.SheetNames.length>1?XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[1]],{header:1}):[];
+      const s2rows=wb.SheetNames.length>1?XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[1]],{header:'A',defval:''}):[];
       const committed={};
-      s2rows.slice(1).forEach(row=>{const item=String(row[0]||'').trim();if(isPosm(item))return;const qty=parseInt(row[7])||0;if(item&&qty>0)committed[item]=qty;});
-      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
-      const nd=[];
-      rows.slice(1).forEach(row=>{const item=String(row[0]||'').trim();if(isPosm(item))return;const sol02=parseInt(row[7])||0,cmt=committed[item]||0;if(!sol02&&!cmt)return;const desc=String(row[1]||'').trim();nd.push({item,desc,total:parseInt(row[3])||0,git:parseInt(row[4])||0,sol01:parseInt(row[5])||0,sol02,cmt,brand:detectBrand(desc)});});
-      allData=nd;avg=getAvg();loadBrands();renderCards();render();
-      document.getElementById('updBadge').textContent='Güncellendi';showToast(nd.length+' ürün içe aktarıldı');
+      s2rows.slice(1).forEach(row=>{const item=String(row.A||'').trim();if(isPosm(item))return;const qty=spSn(row.H);if(item&&qty>0)committed[item]=qty;});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:'A',defval:''});
+      const nd=[],np=[];
+      rows.slice(1).forEach(row=>{
+        const item=String(row.A||'').trim();
+        const desc=String(row.B||'').trim();
+        if(!item)return;
+        const sol02=spSn(row.H),git=spSn(row.E),total=spSn(row.D);
+        if(isPosm(item)){
+          if(sol02>0)np.push({item,desc,total,git,sol02,brand:spBrand(desc),type:spPosmType(desc),cl:spCl(desc)});
+        } else {
+          const cmt=committed[item]||0;
+          if(!sol02&&!cmt)return;
+          nd.push({item,desc,total,git,sol01:spSn(row.F),sol02,cmt,brand:spBrand(desc),cl:spCl(desc)});
+        }
+      });
+      allData=nd;posmData=np;avg=getAvg();
+      loadBrands();loadCl();renderCards();render();
+      loadPosmFilters();
+      const d=new Date();
+      const months=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+      document.getElementById('hdrDate').textContent='Son güncelleme: '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+      showToast('⟳ Veriler işlendi, sunucuya gönderiliyor…');
+      const enc_raw=CryptoJS.AES.encrypt(JSON.stringify(nd),'MH2026').toString();
+      const enc_posm=CryptoJS.AES.encrypt(JSON.stringify(np),'MH2026').toString();
+      fetch('/api/update',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer MH2026'},
+        body:JSON.stringify({enc_raw,enc_posm})
+      }).then(r=>r.json()).then(data=>{
+        if(data.success){
+          document.getElementById('updBadge').textContent='✓ Güncellendi';
+          showToast('✅ '+nd.length+' ürün + '+np.length+' POSM kaydedildi!');
+        } else {
+          showToast('⚠ Sunucu hatası: '+data.error);
+        }
+      }).catch(()=>showToast('⚠ Bağlantı hatası'));
     }catch(err){showToast('Hata: '+err.message);}
   };
   r.readAsArrayBuffer(f);
