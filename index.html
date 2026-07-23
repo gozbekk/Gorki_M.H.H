@@ -810,6 +810,15 @@ function adminTap(){
 }
 
 
+
+function updateStaticBadge(){
+  const badge=document.getElementById('updBadge');
+  badge.textContent='✓ Veriler hazır';
+  badge.style.background='var(--okbg)';
+  badge.style.borderColor='var(--okbr)';
+  badge.style.color='var(--ok)';
+}
+
 // ── LIVE FETCH SHAREPOINT ──
 const SHAREPOINT_URL = "https://corsproxy.io/?url=https://moethennessy-my.sharepoint.com/:x:/p/gozbek/IQDZ3em8y30hSbP7eNAUZuxbAVagZjZ5CxyuL-DOkOpatgY?e=71i4PV%26download=1";
 
@@ -919,8 +928,7 @@ setInterval(updateBadgeTick, 60000);
         avg=getAvg();
         loadBrands();loadCl();renderCards();render();
         loadPosmFilters();
-        fetchAndUpdate();
-        setInterval(fetchAndUpdate,15*60*1000);
+        updateStaticBadge();
       }
     }catch(e){document.getElementById('loginScreen').style.display='flex';}
   } else {
