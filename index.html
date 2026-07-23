@@ -305,7 +305,7 @@ html.dark .theme-toggle-knob{transform:translateX(24px);}
 </head>
 <body>
 
-<div id="loginScreen" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Inter',system-ui,sans-serif;">
+<div id="loginScreen" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;align-items:center;justify-content:center;font-family:'Inter',system-ui,sans-serif;">
   <div style="background:var(--white);border:1px solid var(--bd);border-radius:16px;padding:40px 48px;width:380px;box-shadow:var(--sh2);text-align:center;">
     <div style="width:52px;height:52px;background:var(--tx);border-radius:12px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--white);">MH</div>
     <div style="font-size:18px;font-weight:800;color:var(--tx);margin-bottom:6px;">Moët Hennessy</div>
@@ -848,7 +848,9 @@ async function fetchAndUpdate(){
   const badge=document.getElementById('updBadge');
   badge.textContent='⟳ Güncelleniyor…';
   try{
-    const resp=await fetch(SHAREPOINT_URL);
+    const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),10000);
+    const resp=await fetch(SHAREPOINT_URL,{signal:ctrl.signal});
+    clearTimeout(tid);
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const buf=await resp.arrayBuffer();
     const wb=XLSX.read(buf,{type:'array'});
@@ -920,7 +922,9 @@ setInterval(updateBadgeTick, 60000);
         fetchAndUpdate();
         setInterval(fetchAndUpdate,15*60*1000);
       }
-    }catch(e){}
+    }catch(e){document.getElementById('loginScreen').style.display='flex';}
+  } else {
+    document.getElementById('loginScreen').style.display='flex';
   }
 })();
 
