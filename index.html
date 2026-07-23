@@ -301,6 +301,42 @@ html.dark .theme-toggle-knob{transform:translateX(24px);}
 .b-em{background:#fefce8;color:#713f12;}.b-em .bdot{background:#d97706;}
 .b-vo{background:#f0fdf4;color:#14532d;}.b-vo .bdot{background:#15803d;}
 .b-xx{background:#f9fafb;color:#6b7280;}.b-xx .bdot{background:#9ca3af;}
+
+/* COL FILTERS */
+.col-filter{
+  display:block;width:100%;margin-top:5px;
+  font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;
+  border:1px solid var(--bd);border-radius:5px;padding:2px 4px;
+  background:var(--white);color:var(--tx);cursor:pointer;
+  font-family:inherit;outline:none;
+}
+html.dark .col-filter{background:#1e293b;border-color:#334155;color:#f1f5f9;}
+thead th.has-filter{white-space:normal;}
+
+/* MOBILE */
+@media(max-width:768px){
+  .hdr{padding:0 14px;height:52px;gap:10px;}
+  .hdr-sep,.hdr-sub{display:none;}
+  .hdr-brand{font-size:13px;}
+  .hdr-r{gap:6px;}
+  .tag{font-size:10px;padding:2px 7px;}
+  .nav-tab{padding:5px 12px;font-size:12px;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);padding:12px 14px 0;gap:8px;}
+  .kpi{padding:14px;}
+  .kpi-val{font-size:22px;}
+  .section{padding:14px 14px 0;}
+  .cards{gap:8px;}
+  .card{min-width:155px;max-width:155px;padding:12px;}
+  .filters{padding:10px 14px 8px;gap:6px;}
+  .sw{min-width:unset;}
+  .twrap{padding:0 14px 40px;}
+  .tbl-card{overflow-x:auto;}
+}
+@media(max-width:480px){
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .hdr-brand{font-size:12px;}
+  .upload-btn span{display:none;}
+}
 </style>
 </head>
 <body>
@@ -377,8 +413,8 @@ html.dark .theme-toggle-knob{transform:translateX(24px);}
 
 <div class="section">
   <div class="sec-top">
-    <span class="sec-title">En Çok Talep</span>
-    <span class="sec-pill">Devam eden siparişler</span>
+    <span class="sec-title">En Çok Stok</span>
+    <span class="sec-pill">SOL02'ye göre sıralı</span>
   </div>
   <div class="cards" id="topCards"></div>
 </div>
@@ -388,15 +424,6 @@ html.dark .theme-toggle-knob{transform:translateX(24px);}
     <svg class="sw-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input class="sinput" id="srch" placeholder="Ürün numarası veya açıklama ile ara…" oninput="render()">
   </div>
-  <select class="fsel" id="bfilter" onchange="render()"><option value="">Tüm markalar</option></select>
-  <select class="fsel" id="stfilter" onchange="render()">
-    <option value="">Tüm durumlar</option>
-    <option value="ok">✓ İyi</option>
-    <option value="warn">⚠ Zayıf</option>
-    <option value="crit">✕ Kritik</option>
-    <option value="cmt">🔒 Siparişli</option>
-  </select>
-  <select class="fsel" id="clfilter" onchange="render()"><option value="">Tüm hacimler</option></select>
   <select class="fsel" id="sortfilter" onchange="applySort()">
     <option value="sol02-desc">SOL02 — büyükten küçüğe</option>
     <option value="sol02-asc">SOL02 — küçükten büyüğe</option>
@@ -404,8 +431,8 @@ html.dark .theme-toggle-knob{transform:translateX(24px);}
     <option value="cmt-asc">Sipariş — küçükten büyüğe</option>
     <option value="desc-asc">Açıklama A → Z</option>
     <option value="brand-asc">Marka A → Z</option>
-    <option value="cl-asc">Hacim — küçükten büyüğe</option>
-    <option value="cl-desc">Hacim — büyükten küçüğe</option>
+    <option value="cl-asc">CL — küçükten büyüğe</option>
+    <option value="cl-desc">CL — büyükten küçüğe</option>
   </select>
 </div>
 
@@ -415,11 +442,12 @@ html.dark .theme-toggle-knob{transform:translateX(24px);}
     <table>
       <thead><tr>
         <th>Ürün No</th>
-        <th style="min-width:260px">Açıklama</th>
-        <th>Marka</th>
-        <th class="r" style="min-width:100px">SOL02</th>
+        <th style="min-width:240px">Açıklama</th>
+        <th class="has-filter">Marka<select id="bfilter" onchange="render()" class="col-filter"><option value="">Tümü</option></select></th>
+        <th class="r has-filter">CL<select id="clfilter" onchange="render()" class="col-filter"><option value="">Tümü</option></select></th>
+        <th class="r has-filter" style="min-width:100px">SOL02<select id="sol02filter" onchange="render()" class="col-filter"><option value="">Tümü</option><option value="1">Stokta var</option><option value="100">≥ 100</option><option value="1000">≥ 1.000</option><option value="5000">≥ 5.000</option><option value="10000">≥ 10.000</option></select></th>
         <th class="r" style="min-width:100px">Sipariş</th>
-        <th style="text-align:center;min-width:90px">Durum</th>
+        <th class="has-filter" style="text-align:center;min-width:100px">Durum<select id="stfilter" onchange="render()" class="col-filter"><option value="">Tümü</option><option value="ok">✓ İyi</option><option value="warn">⚠ Zayıf</option><option value="crit">✕ Kritik</option><option value="cmt">Siparişli</option></select></th>
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table>
@@ -527,12 +555,12 @@ function stCls(s){return s==='crit'?'st-crit':s==='warn'?'st-warn':'st-ok';}
 function applySort(){const v=document.getElementById('sortfilter').value,pts=v.split('-');sortDir=pts[pts.length-1]==='asc'?1:-1;sortCol=pts.slice(0,-1).join('-');render();}
 
 function renderCards(){
-  const top=allData.filter(p=>p.cmt>0).sort((a,b)=>b.cmt-a.cmt).slice(0,8);
+  const top=allData.filter(p=>p.sol02>0).sort((a,b)=>b.sol02-a.sol02).slice(0,8);
   const el=document.getElementById('topCards');
-  if(!top.length){el.innerHTML='<p style="font-size:12px;color:var(--t3);padding:4px 0">Devam eden sipariş yok.</p>';return;}
-  const mx=top[0].cmt;
+  if(!top.length){el.innerHTML='<p style="font-size:12px;color:var(--t3);padding:4px 0">Stok verisi yok.</p>';return;}
+  const mx=top[0].sol02;
   el.innerHTML=top.map((p,i)=>{
-    const risk=p.cmt>p.sol02;
+    const risk=p.cmt>0&&p.cmt>p.sol02;
     return`<div class="card" onclick="openDrawer('${p.item}');hl('${p.item}')">
       <div class="card-head">
         <span class="card-rank">#${i+1}</span>
@@ -541,10 +569,10 @@ function renderCards(){
       </div>
       <div class="card-desc">${p.desc}</div>
       <div class="card-nums">
-        <div class="cn"><div class="cn-v" style="color:var(--pur)">${fmt(p.cmt)}</div><div class="cn-l">sipariş</div></div>
-        <div class="cn" style="text-align:right"><div class="cn-v" style="color:${risk?'var(--crit)':'var(--gold)'}">${fmt(p.sol02)}</div><div class="cn-l">SOL02</div></div>
+        <div class="cn"><div class="cn-v" style="color:var(--gold)">${fmt(p.sol02)}</div><div class="cn-l">SOL02</div></div>
+        <div class="cn" style="text-align:right"><div class="cn-v" style="color:var(--pur)">${p.cmt?fmt(p.cmt):'—'}</div><div class="cn-l">sipariş</div></div>
       </div>
-      <div class="card-track"><div class="card-fill" style="width:${Math.round(p.cmt/mx*100)}%"></div></div>
+      <div class="card-track"><div class="card-fill" style="width:${Math.round(p.sol02/mx*100)}%"></div></div>
     </div>`;
   }).join('');
 }
@@ -598,14 +626,16 @@ function hl(item){document.querySelectorAll('tr.hl').forEach(r=>r.classList.remo
 function render(){
   const q=document.getElementById('srch').value.toLowerCase().trim();
   const br=document.getElementById('bfilter').value,st=document.getElementById('stfilter').value;
+  const clv=document.getElementById('clfilter').value;
+  const s02f=parseInt(document.getElementById('sol02filter').value)||0;
   const mxS=Math.max(1,...allData.filter(p=>p.sol02>0).map(p=>p.sol02));
   const mxC=Math.max(1,...allData.filter(p=>p.cmt>0).map(p=>p.cmt));
   let rows=allData.filter(p=>{
     if(!p.sol02&&!p.cmt)return false;
     if(q&&!p.item.includes(q)&&!p.desc.toLowerCase().includes(q)&&!p.brand.toLowerCase().includes(q))return false;
     if(br&&p.brand!==br)return false;
-    const clv=document.getElementById('clfilter').value;
     if(clv&&String(p.cl)!==clv)return false;
+    if(s02f&&p.sol02<s02f)return false;
     if(st==='cmt')return p.cmt>0;
     if(st&&stOf(p)!==st)return false;
     return true;
@@ -623,6 +653,7 @@ function render(){
       <td><div class="item-wrap"><span class="ino">${p.item}</span><button class="cpbtn" onclick="event.stopPropagation();copyItem('${p.item}',this)">⎘</button></div></td>
       <td><div class="dtxt">${p.desc}</div></td>
       <td><span class="btag ${bc(p.brand)}"><span class="bdot"></span>${p.brand}</span></td>
+      <td style="text-align:right;font-size:12px;color:var(--t2)">${p.cl?p.cl+'cl':'—'}</td>
       <td style="text-align:right"><div class="sval" style="color:var(--gold)">${fmt(p.sol02)}</div><div class="sbar"><div class="sbarf" style="width:${bPct}%;background:${bColor}"></div></div></td>
       <td style="text-align:right">${p.cmt?`<div class="cval" style="color:${risk?'var(--crit)':'var(--pur)'}">${fmt(p.cmt)}</div><div class="cbar"><div class="cbarf" style="width:${cPct}%;${risk?'background:var(--crit)':''}"></div></div>`:`<span style="color:var(--t3)">—</span>`}</td>
       <td style="text-align:center">${p.sol02?`<span class="stbadge ${stCls(s)}"><span class="stdot"></span>${stLabel(s)}</span>`:`<span style="color:var(--t3)">—</span>`}</td>
