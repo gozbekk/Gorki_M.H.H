@@ -820,7 +820,7 @@ function updateStaticBadge(){
 }
 
 // ── LIVE FETCH SHAREPOINT ──
-const SHAREPOINT_URL = "https://corsproxy.io/?url=https://moethennessy-my.sharepoint.com/:x:/p/gozbek/IQDZ3em8y30hSbP7eNAUZuxbAVagZjZ5CxyuL-DOkOpatgY?e=71i4PV%26download=1";
+const SHAREPOINT_URL = "/api/proxy";
 
 function spBrand(desc){
   const d=desc.toLowerCase().trim();
@@ -857,7 +857,7 @@ async function fetchAndUpdate(){
   const badge=document.getElementById('updBadge');
   badge.textContent='⟳ Güncelleniyor…';
   try{
-    const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),10000);
+    const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),30000);
     const resp=await fetch(SHAREPOINT_URL,{signal:ctrl.signal});
     clearTimeout(tid);
     if(!resp.ok) throw new Error('HTTP '+resp.status);
@@ -928,7 +928,8 @@ setInterval(updateBadgeTick, 60000);
         avg=getAvg();
         loadBrands();loadCl();renderCards();render();
         loadPosmFilters();
-        updateStaticBadge();
+        fetchAndUpdate();
+        setInterval(fetchAndUpdate, 15*60*1000);
       }
     }catch(e){document.getElementById('loginScreen').style.display='flex';}
   } else {
