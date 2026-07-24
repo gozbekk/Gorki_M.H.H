@@ -627,13 +627,42 @@ function renderCards(){
   }).join('');
 }
 
-const BRAND_IMG={
-  'Hennessy':'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Hennesy_XO_close.jpg/500px-Hennesy_XO_close.jpg',
-  'Dom Pérignon':'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Dom_Perignon_1999.jpg/500px-Dom_Perignon_1999.jpg',
-  'Veuve Clicquot':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Veuve_clicquot_bottle_sizes.jpg/500px-Veuve_clicquot_bottle_sizes.jpg',
-  'Krug':'https://upload.wikimedia.org/wikipedia/en/6/68/Bottle_of_Champagne_Krug.JPG',
-  'Ardbeg':'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Ardbeg_Corryvreckan.jpg/500px-Ardbeg_Corryvreckan.jpg',
-};
+function getProductImg(item,desc,brand){
+  if(notes[item]&&notes[item].imageUrl)return notes[item].imageUrl;
+  const d=desc.toLowerCase();
+  if(brand==='Hennessy'||d.includes('hennessy')||d.includes('hennesy')){
+    if(d.includes('richard'))return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Hennessy_Paradis.jpg/500px-Hennessy_Paradis.jpg';
+    if(d.includes('paradis'))return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Hennessy_Paradis.jpg/500px-Hennessy_Paradis.jpg';
+    if(d.includes(' xo')||d.includes('x.o'))return'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Cognac_Hennessy_XO.jpg/500px-Cognac_Hennessy_XO.jpg';
+    if(d.includes('vsop')||d.includes('v.s.o.p'))return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Hennessy_V.S.O.P.jpg/500px-Hennessy_V.S.O.P.jpg';
+    return'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Hennesy_XO_close.jpg/500px-Hennesy_XO_close.jpg';
+  }
+  if(brand==='Dom Pérignon'||d.includes('dom per')){
+    return'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Dom_Perignon_1999.jpg/500px-Dom_Perignon_1999.jpg';
+  }
+  if(brand==='Moët & Chandon'||d.includes('moet')||d.includes('moët')){
+    return'https://upload.wikimedia.org/wikipedia/commons/b/b1/Mo%C3%ABt_%26_Chandon_in_different_sizes.jpg';
+  }
+  if(brand==='Veuve Clicquot'||d.includes('veuve')||d.includes('clicquot')){
+    return'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Veuve_clicquot_bottle_sizes.jpg/500px-Veuve_clicquot_bottle_sizes.jpg';
+  }
+  if(brand==='Krug'||d.includes('krug')){
+    return'https://upload.wikimedia.org/wikipedia/en/6/68/Bottle_of_Champagne_Krug.JPG';
+  }
+  if(brand==='Ruinart'||d.includes('ruinart')){
+    return'https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Bouteille_champagne_ruinart_1006884.jpg/500px-Bouteille_champagne_ruinart_1006884.jpg';
+  }
+  if(brand==='Glenmorangie'||d.includes('glenmorangie')){
+    return'https://upload.wikimedia.org/wikipedia/commons/c/c0/Glenmorangie_The_Original_whisky.jpg';
+  }
+  if(brand==='Ardbeg'||d.includes('ardbeg')){
+    return'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Ardbeg_Corryvreckan.jpg/500px-Ardbeg_Corryvreckan.jpg';
+  }
+  if(brand==='Belvédère'||d.includes('belvedere')||d.includes('belvédère')){
+    return'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Belvedere_Vodka_02.tif/lossy-page1-500px-Belvedere_Vodka_02.tif.jpg';
+  }
+  return'';
+}
 const BRAND_STYLE={
   'Hennessy':{bg:'linear-gradient(135deg,#5C2D0E,#8B4513)',c:'#F5DEB3',i:'HY'},
   'Moët & Chandon':{bg:'linear-gradient(135deg,#7A5A0A,#C9A84C)',c:'#FFF8E7',i:'M&C'},
@@ -663,7 +692,7 @@ function openDrawer(item){
   document.getElementById('drName').textContent=p.desc;
   const s=stOf(p),risk=p.cmt>0&&p.cmt>p.sol02,tot=p.sol02+p.cmt+p.git;
   const pS=tot?Math.round(p.sol02/tot*100):0,pC=tot?Math.round(p.cmt/tot*100):0,pG=tot?Math.round(p.git/tot*100):0;
-  const imgUrl=(notes[item]&&notes[item].imageUrl)||BRAND_IMG[p.brand]||'';
+  const imgUrl=getProductImg(item,p.desc,p.brand);
   const bs=getBrandStyle(p.brand);
   document.getElementById('drBd').innerHTML=`
     <div class="prod-img-wrap" style="background:${bs.bg}">
