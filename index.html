@@ -709,16 +709,7 @@ function openDrawer(item){
   document.getElementById('drName').textContent=p.desc;
   const s=stOf(p),risk=p.cmt>0&&p.cmt>p.sol02,tot=p.sol02+p.cmt+p.git;
   const pS=tot?Math.round(p.sol02/tot*100):0,pC=tot?Math.round(p.cmt/tot*100):0,pG=tot?Math.round(p.git/tot*100):0;
-  const imgUrl=getProductImg(item,p.desc,p.brand);
-  const bs=getBrandStyle(p.brand);
   document.getElementById('drBd').innerHTML=`
-    <div class="prod-img-wrap" style="background:${bs.bg}">
-      <div class="prod-img-placeholder" style="color:${bs.c}">
-        <div class="prod-img-brand">${bs.i}</div>
-        <div class="prod-img-sub">${p.brand}</div>
-      </div>
-      ${imgUrl?`<img class="prod-img-over" src="${imgUrl}" alt="${p.desc}" loading="lazy" onerror="this.remove()">`:''}
-    </div>
     <div class="dr-sec">
       <div class="dr-sec-t">Kimlik</div>
       <div class="dr-row"><span class="dr-lbl">Marka</span><span class="btag ${bc(p.brand)}"><span class="bdot"></span>${p.brand}</span></div>
