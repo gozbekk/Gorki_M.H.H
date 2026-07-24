@@ -721,7 +721,7 @@ function render(){
   const mxC=Math.max(1,...allData.filter(p=>p.cmt>0).map(p=>p.cmt));
   let rows=allData.filter(p=>{
     if(!p.sol02&&!p.cmt)return false;
-    if(q&&!p.item.includes(q)&&!p.desc.toLowerCase().includes(q)&&!p.brand.toLowerCase().includes(q))return false;
+    if(q&&!p.item.toLowerCase().includes(q)&&!p.desc.toLowerCase().includes(q)&&!p.brand.toLowerCase().includes(q))return false;
     if(br&&p.brand!==br)return false;
     if(clv&&String(p.cl)!==clv)return false;
     if(s02f&&p.sol02<s02f)return false;
@@ -943,7 +943,7 @@ function renderPosm(){
   const br=document.getElementById('pbfilter').value;
   const tp=document.getElementById('ptfilter').value;
   let rows=posmData.filter(p=>{
-    if(q&&!p.item.includes(q)&&!p.desc.toLowerCase().includes(q)&&!p.brand.toLowerCase().includes(q))return false;
+    if(q&&!p.item.toLowerCase().includes(q)&&!p.desc.toLowerCase().includes(q)&&!p.brand.toLowerCase().includes(q))return false;
     if(br&&p.brand!==br)return false;
     if(tp&&p.type!==tp)return false;
     return true;
