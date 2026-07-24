@@ -302,6 +302,14 @@ html.dark .theme-toggle-knob{transform:translateX(24px);}
 .b-vo{background:#f0fdf4;color:#14532d;}.b-vo .bdot{background:#15803d;}
 .b-xx{background:#f9fafb;color:#6b7280;}.b-xx .bdot{background:#9ca3af;}
 
+/* PRODUCT IMAGE */
+.prod-img-wrap{width:100%;height:190px;border-radius:12px;overflow:hidden;margin-bottom:14px;position:relative;flex-shrink:0;}
+.prod-img-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
+.prod-img-over{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;}
+.prod-img-brand{font-size:30px;font-weight:800;letter-spacing:-0.5px;line-height:1;}
+.prod-img-sub{font-size:10px;font-weight:600;opacity:.75;text-transform:uppercase;letter-spacing:.6px;}
+.note-img-input{width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:12px;font-family:inherit;color:var(--tx);background:var(--white);outline:none;transition:border-color .15s;box-sizing:border-box;}
+.note-img-input:focus{border-color:var(--pur);}
 /* NOTES */
 .note-box{background:#fefce8;border:1.5px solid #fde047;border-radius:10px;padding:14px 16px;margin-bottom:12px;}
 .note-box-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
@@ -619,13 +627,52 @@ function renderCards(){
   }).join('');
 }
 
+const BRAND_IMG={
+  'Hennessy':'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Hennesy_XO_close.jpg/500px-Hennesy_XO_close.jpg',
+  'Dom Pérignon':'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Dom_Perignon_1999.jpg/500px-Dom_Perignon_1999.jpg',
+  'Veuve Clicquot':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Veuve_clicquot_bottle_sizes.jpg/500px-Veuve_clicquot_bottle_sizes.jpg',
+  'Krug':'https://upload.wikimedia.org/wikipedia/en/6/68/Bottle_of_Champagne_Krug.JPG',
+  'Ardbeg':'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Ardbeg_Corryvreckan.jpg/500px-Ardbeg_Corryvreckan.jpg',
+};
+const BRAND_STYLE={
+  'Hennessy':{bg:'linear-gradient(135deg,#5C2D0E,#8B4513)',c:'#F5DEB3',i:'HY'},
+  'Moët & Chandon':{bg:'linear-gradient(135deg,#7A5A0A,#C9A84C)',c:'#FFF8E7',i:'M&C'},
+  'Dom Pérignon':{bg:'linear-gradient(135deg,#0D0D1A,#2C2C54)',c:'#C9A84C',i:'DP'},
+  'Veuve Clicquot':{bg:'linear-gradient(135deg,#B35C00,#F28B00)',c:'#fff',i:'VC'},
+  'Krug':{bg:'linear-gradient(135deg,#4A3728,#8B7355)',c:'#F5E6D3',i:'KG'},
+  'Ruinart':{bg:'linear-gradient(135deg,#C4856A,#E8C9A0)',c:'#4A2C17',i:'RU'},
+  'Glenmorangie':{bg:'linear-gradient(135deg,#1A3A5C,#2C6094)',c:'#E8D5B7',i:'GN'},
+  'Ardbeg':{bg:'linear-gradient(135deg,#1A3A1A,#2D5A2D)',c:'#B8D4A8',i:'AD'},
+  'Belvédère':{bg:'linear-gradient(135deg,#0D2B5E,#1B4A9C)',c:'#C8D8F0',i:'BV'},
+  'Cloudy Bay':{bg:'linear-gradient(135deg,#2A4A3A,#4A7C59)',c:'#C8E0D0',i:'CB'},
+  'Terrazas':{bg:'linear-gradient(135deg,#5C1A1A,#8B2C2C)',c:'#F5C0C0',i:'TZ'},
+  'Armand de Brignac':{bg:'linear-gradient(135deg,#8B7300,#FFD700)',c:'#1A1A00',i:'AB'},
+  'Chandon':{bg:'linear-gradient(135deg,#2A5A8C,#4A8CBF)',c:'#E8F4FF',i:'CH'},
+  'Château d\'Yquem':{bg:'linear-gradient(135deg,#6B4C11,#C9A84C)',c:'#FFF8E7',i:'YQ'},
+  'Joseph Phelps':{bg:'linear-gradient(135deg,#4A1A1A,#8B3A3A)',c:'#F5E0E0',i:'JP'},
+  'Numanthia':{bg:'linear-gradient(135deg,#2A1A3A,#5C3A7A)',c:'#E0D0F5',i:'NM'},
+  'Whistle Pig':{bg:'linear-gradient(135deg,#2A1A0A,#6B4A1A)',c:'#F5E0C0',i:'WP'},
+};
+function getBrandStyle(brand){
+  return BRAND_STYLE[brand]||{bg:'linear-gradient(135deg,#374151,#4B5563)',c:'#F3F4F6',i:(brand||'MH').slice(0,2).toUpperCase()};
+}
+
 function openDrawer(item){
   const p=allData.find(x=>x.item===item);if(!p)return;
   document.getElementById('drCode').textContent=item;
   document.getElementById('drName').textContent=p.desc;
   const s=stOf(p),risk=p.cmt>0&&p.cmt>p.sol02,tot=p.sol02+p.cmt+p.git;
   const pS=tot?Math.round(p.sol02/tot*100):0,pC=tot?Math.round(p.cmt/tot*100):0,pG=tot?Math.round(p.git/tot*100):0;
+  const imgUrl=(notes[item]&&notes[item].imageUrl)||BRAND_IMG[p.brand]||'';
+  const bs=getBrandStyle(p.brand);
   document.getElementById('drBd').innerHTML=`
+    <div class="prod-img-wrap" style="background:${bs.bg}">
+      <div class="prod-img-placeholder" style="color:${bs.c}">
+        <div class="prod-img-brand">${bs.i}</div>
+        <div class="prod-img-sub">${p.brand}</div>
+      </div>
+      ${imgUrl?`<img class="prod-img-over" src="${imgUrl}" alt="${p.desc}" loading="lazy" onerror="this.remove()">`:''}
+    </div>
     <div class="dr-sec">
       <div class="dr-sec-t">Kimlik</div>
       <div class="dr-row"><span class="dr-lbl">Marka</span><span class="btag ${bc(p.brand)}"><span class="bdot"></span>${p.brand}</span></div>
@@ -664,8 +711,8 @@ function openDrawer(item){
 
 function renderNoteSection(item){
   const note=notes[item];
-  const dateStr=note?new Date(note.date).toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-  const noteHtml=note?`
+  const dateStr=note&&note.date?new Date(note.date).toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+  const noteHtml=note&&note.text?`
     <div class="note-box">
       <div class="note-box-header">
         <span class="note-box-icon">📌</span>
@@ -678,8 +725,12 @@ function renderNoteSection(item){
   return`${noteHtml}
     <div class="note-admin-area">
       <div style="font-size:11px;font-weight:700;color:var(--pur);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">📝 Not Ekle / Düzenle</div>
-      <textarea class="note-textarea" id="noteInput_${item}" placeholder="Örn: Bu ürün 15 Ağustos'ta stoka girecek…">${note?note.text:''}</textarea>
-      <div>
+      <textarea class="note-textarea" id="noteInput_${item}" placeholder="Örn: Bu ürün 15 Ağustos'ta stoka girecek…">${note&&note.text?note.text:''}</textarea>
+      <div style="margin-top:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--pur);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">🖼 Fotoğraf URL</div>
+        <input class="note-img-input" id="noteImgInput_${item}" type="url" placeholder="https://…/photo.jpg" value="${note&&note.imageUrl?note.imageUrl:''}">
+      </div>
+      <div style="margin-top:8px">
         <button class="note-save-btn" onclick="saveNote('${item}')">Kaydet</button>
         ${note?`<button class="note-del-btn" onclick="deleteNote('${item}')">Sil</button>`:''}
       </div>
@@ -688,13 +739,17 @@ function renderNoteSection(item){
 
 async function saveNote(item){
   const ta=document.getElementById('noteInput_'+item);
-  if(!ta||!ta.value.trim()){showToast('Not boş olamaz');return;}
-  const btn=ta.nextElementSibling.querySelector('.note-save-btn');
-  btn.textContent='Kaydediliyor…';btn.disabled=true;
+  const imgInp=document.getElementById('noteImgInput_'+item);
+  const text=(ta&&ta.value.trim())||'';
+  const imageUrl=(imgInp&&imgInp.value.trim())||'';
+  if(!text&&!imageUrl){showToast('Not veya fotoğraf URL gerekli');return;}
+  const btnArea=document.querySelector(`#noteInput_${item}`)?.closest('.note-admin-area');
+  const btn=btnArea?.querySelector('.note-save-btn');
+  if(btn){btn.textContent='Kaydediliyor…';btn.disabled=true;}
   try{
-    const r=await fetch('/api/notes',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer MH2026'},body:JSON.stringify({item,text:ta.value.trim()})});
+    const r=await fetch('/api/notes',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer MH2026'},body:JSON.stringify({item,text,imageUrl})});
     const d=await r.json();
-    if(d.success){notes=d.notes;showToast('✅ Not kaydedildi!');openDrawer(item);}
+    if(d.success){notes=d.notes;showToast('✅ Kaydedildi!');openDrawer(item);}
     else showToast('⚠ Hata: '+d.error);
   }catch(e){showToast('⚠ Bağlantı hatası');}
 }

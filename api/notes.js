@@ -40,17 +40,19 @@ export default async function handler(req, res) {
     const auth = req.headers.authorization || "";
     if (auth !== `Bearer ${SECRET}`) return res.status(401).json({ error: "Unauthorized" });
 
-    const { item, text } = req.body || {};
+    const { item, text, imageUrl } = req.body || {};
     if (!item) return res.status(400).json({ error: "Missing item" });
 
     try {
       const { data: notes, sha } = await readNotes();
 
-      if (!text || !text.trim()) {
+      if ((!text || !text.trim()) && (!imageUrl || !imageUrl.trim())) {
         delete notes[item];
       } else {
         notes[item] = {
-          text: text.trim(),
+          ...(notes[item] || {}),
+          text: (text || "").trim(),
+          imageUrl: (imageUrl || "").trim(),
           date: new Date().toISOString(),
         };
       }
