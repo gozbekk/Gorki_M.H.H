@@ -1,48 +1,35 @@
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO = "gozbekk/Gorki_M.H.H";
-const FILE = "index.html";
+const FILE = "data/stock.json";
 const UPDATE_SECRET = "MH2026";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const auth = req.headers.authorization || "";
-  if (auth !== `Bearer ${UPDATE_SECRET}`) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  if (auth !== `Bearer ${UPDATE_SECRET}`) return res.status(401).json({ error: "Unauthorized" });
 
-  const { enc_raw, enc_posm } = req.body || {};
-  if (!enc_raw || !enc_posm) {
-    return res.status(400).json({ error: "Missing enc_raw or enc_posm" });
-  }
+  const { enc_raw, enc_posm, updated_at } = req.body || {};
+  if (!enc_raw || !enc_posm) return res.status(400).json({ error: "Missing data" });
 
   try {
-    // Get current file from GitHub
+    // Get current SHA of stock.json
     const getResp = await fetch(
       `https://api.github.com/repos/${REPO}/contents/${FILE}`,
-      {
-        headers: {
-          Authorization: `token ${GITHUB_TOKEN}`,
-          Accept: "application/vnd.github.v3+json",
-        },
-      }
+      { headers: { Authorization: `token ${GITHUB_TOKEN}`, Accept: "application/vnd.github.v3+json" } }
     );
-    if (!getResp.ok) throw new Error("GitHub GET failed: " + getResp.status);
-    const fileData = await getResp.json();
+    let sha = null;
+    if (getResp.ok) {
+      const fileData = await getResp.json();
+      sha = fileData.sha;
+    }
 
-    // Decode content
-    let html = Buffer.from(fileData.content, "base64").toString("utf-8");
+    const payload = JSON.stringify({ enc_raw, enc_posm, updated_at: updated_at || new Date().toISOString() });
 
-    // Replace encrypted blobs
-    html = html.replace(/const ENC_RAW="[^"]*";/, `const ENC_RAW="${enc_raw}";`);
-    html = html.replace(/const ENC_POSM="[^"]*";/, `const ENC_POSM="${enc_posm}";`);
-
-    // Push updated file to GitHub
     const putResp = await fetch(
       `https://api.github.com/repos/${REPO}/contents/${FILE}`,
       {
@@ -53,21 +40,20 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: "Update stock data via admin panel",
-          content: Buffer.from(html, "utf-8").toString("base64"),
-          sha: fileData.sha,
+          message: "Update stock data",
+          content: Buffer.from(payload, "utf-8").toString("base64"),
+          ...(sha ? { sha } : {}),
         }),
       }
     );
 
     if (!putResp.ok) {
       const err = await putResp.json();
-      throw new Error("GitHub PUT failed: " + JSON.stringify(err));
+      throw new Error(JSON.stringify(err));
     }
 
     res.status(200).json({ success: true });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 }

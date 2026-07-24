@@ -796,21 +796,26 @@ document.getElementById('fileInput').addEventListener('change',function(e){
       const d=new Date();
       const months=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
       document.getElementById('hdrDate').textContent='Son güncelleme: '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
-      showToast('⟳ Veriler işlendi, sunucuya gönderiliyor…');
-      const enc_raw=CryptoJS.AES.encrypt(JSON.stringify(nd),'MH2026').toString();
-      const enc_posm=CryptoJS.AES.encrypt(JSON.stringify(np),'MH2026').toString();
+      const badge=document.getElementById('updBadge');
+      badge.textContent='⟳ Kaydediliyor…';
+      const pwd=localStorage.getItem('mh-pwd')||'MH2026';
+      const enc_raw=CryptoJS.AES.encrypt(JSON.stringify(nd),pwd).toString();
+      const enc_posm=CryptoJS.AES.encrypt(JSON.stringify(np),pwd).toString();
+      const updated_at=new Date().toISOString();
       fetch('/api/update',{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer MH2026'},
-        body:JSON.stringify({enc_raw,enc_posm})
+        body:JSON.stringify({enc_raw,enc_posm,updated_at})
       }).then(r=>r.json()).then(data=>{
         if(data.success){
-          document.getElementById('updBadge').textContent='✓ Güncellendi';
-          showToast('✅ '+nd.length+' ürün + '+np.length+' POSM kaydedildi!');
+          badge.textContent='✓ Güncellendi';
+          badge.style.background='var(--okbg)';badge.style.borderColor='var(--okbr)';badge.style.color='var(--ok)';
+          showToast('✅ '+nd.length+' ürün + '+np.length+' POSM — tüm kullanıcılar güncellendi!');
         } else {
-          showToast('⚠ Sunucu hatası: '+data.error);
+          badge.textContent='⚠ Hata';
+          showToast('⚠ Sunucu hatası: '+(data.error||'bilinmiyor'));
         }
-      }).catch(()=>showToast('⚠ Bağlantı hatası'));
+      }).catch(e=>showToast('⚠ Bağlantı hatası: '+e.message));
     }catch(err){showToast('Hata: '+err.message);}
   };
   r.readAsArrayBuffer(f);
@@ -922,23 +927,35 @@ function openDrawerPosm(item){
 }
 
 // ── LOGIN / DÉCHIFFREMENT ──
-function doLogin(){
+async function doLogin(){
   const pwd=document.getElementById('pwdInput').value.trim();
   if(!pwd){document.getElementById('loginErr').textContent='Şifre gerekli.';return;}
+  const btn=document.querySelector('.login-btn');
+  if(btn){btn.textContent='Yükleniyor…';btn.disabled=true;}
   try{
-    const rawStr=CryptoJS.AES.decrypt(ENC_RAW,pwd).toString(CryptoJS.enc.Utf8);
-    const posmStr=CryptoJS.AES.decrypt(ENC_POSM,pwd).toString(CryptoJS.enc.Utf8);
+    // Try to get latest data from server first
+    let rawEnc=ENC_RAW, posmEnc=ENC_POSM;
+    try{
+      const resp=await fetch('/api/getdata',{cache:'no-store'});
+      if(resp.ok){
+        const d=await resp.json();
+        if(d.enc_raw&&d.enc_posm){rawEnc=d.enc_raw;posmEnc=d.enc_posm;}
+      }
+    }catch(_){}
+    const rawStr=CryptoJS.AES.decrypt(rawEnc,pwd).toString(CryptoJS.enc.Utf8);
+    const posmStr=CryptoJS.AES.decrypt(posmEnc,pwd).toString(CryptoJS.enc.Utf8);
     if(!rawStr||!rawStr.startsWith('[')){throw new Error('bad');}
     allData=JSON.parse(rawStr);
     posmData=JSON.parse(posmStr);
     avg=getAvg();
     localStorage.setItem('mh-session',Date.now());
+    localStorage.setItem('mh-pwd',pwd);
     document.getElementById('loginScreen').style.display='none';
     loadBrands();loadCl();renderCards();render();
     loadPosmFilters();
-    fetchAndUpdate();
-    setInterval(fetchAndUpdate, 15*60*1000);
+    trackVisit('Ürün');
   }catch(e){
+    if(btn){btn.textContent='Giriş Yap';btn.disabled=false;}
     document.getElementById('loginErr').textContent='Hatalı şifre. Tekrar deneyin.';
     document.getElementById('pwdInput').value='';
     document.getElementById('pwdInput').focus();
@@ -1102,23 +1119,27 @@ function updateBadgeTick(){
 setInterval(updateBadgeTick, 60000);
 
 
-// ── AUTO-SESSION (8h) ──
-(function(){
+// ── AUTO-SESSION ──
+(async function(){
   const saved = localStorage.getItem('mh-session');
-  if(saved && Date.now()-parseInt(saved) < 60*60*1000){
+  const pwd = localStorage.getItem('mh-pwd');
+  if(saved && Date.now()-parseInt(saved) < 60*60*1000 && pwd){
     document.getElementById('loginScreen').style.display='none';
-    // Charger données chiffrées puis fetch SharePoint
     try{
-      const rawStr=CryptoJS.AES.decrypt(ENC_RAW,'MH2026').toString(CryptoJS.enc.Utf8);
-      const posmStr=CryptoJS.AES.decrypt(ENC_POSM,'MH2026').toString(CryptoJS.enc.Utf8);
+      let rawEnc=ENC_RAW, posmEnc=ENC_POSM;
+      try{
+        const resp=await fetch('/api/getdata',{cache:'no-store'});
+        if(resp.ok){const d=await resp.json();if(d.enc_raw&&d.enc_posm){rawEnc=d.enc_raw;posmEnc=d.enc_posm;}}
+      }catch(_){}
+      const rawStr=CryptoJS.AES.decrypt(rawEnc,pwd).toString(CryptoJS.enc.Utf8);
+      const posmStr=CryptoJS.AES.decrypt(posmEnc,pwd).toString(CryptoJS.enc.Utf8);
       if(rawStr&&rawStr.startsWith('[')){
         allData=JSON.parse(rawStr);
         posmData=JSON.parse(posmStr);
         avg=getAvg();
         loadBrands();loadCl();renderCards();render();
         loadPosmFilters();
-        fetchAndUpdate();
-        setInterval(fetchAndUpdate, 15*60*1000);
+        trackVisit('Ürün');
       }
     }catch(e){document.getElementById('loginScreen').style.display='flex';}
   } else {
