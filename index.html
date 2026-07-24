@@ -384,31 +384,45 @@ thead th.has-filter{white-space:normal;}
 
 <div id="page-urun">
 <div class="kpi-row">
-  <div class="kpi c-gold">
+  <div class="kpi c-gold" onclick="showKpiDetail('total')" style="cursor:pointer">
     <div class="kpi-top"><span class="kpi-lbl">Stokta Ürün</span><div class="kpi-ico">📦</div></div>
     <div class="kpi-val" id="k1">—</div>
     <div class="kpi-hint">SOL02 &gt; 0 referans</div>
   </div>
-  <div class="kpi">
+  <div class="kpi" onclick="showKpiDetail('sol02')" style="cursor:pointer">
     <div class="kpi-top"><span class="kpi-lbl">Toplam SOL02</span><div class="kpi-ico">🏭</div></div>
     <div class="kpi-val" id="k2">—</div>
     <div class="kpi-hint">mevcut kasa</div>
   </div>
-  <div class="kpi c-pur">
+  <div class="kpi c-pur" onclick="showKpiDetail('siparisler')" style="cursor:pointer">
     <div class="kpi-top"><span class="kpi-lbl">Toplam Sipariş</span><div class="kpi-ico">🛒</div></div>
     <div class="kpi-val" id="k3">—</div>
     <div class="kpi-hint">sipariş edilen kasa</div>
   </div>
-  <div class="kpi c-red">
+  <div class="kpi c-red" onclick="showKpiDetail('kritik')" style="cursor:pointer">
     <div class="kpi-top"><span class="kpi-lbl">Kritik Stok</span><div class="kpi-ico">⚠️</div></div>
     <div class="kpi-val" id="k4">—</div>
     <div class="kpi-hint">ortalamanın %20 altı</div>
   </div>
-  <div class="kpi c-red">
+  <div class="kpi c-red" onclick="showKpiDetail('risk')" style="cursor:pointer">
     <div class="kpi-top"><span class="kpi-lbl">Tükenme Riski</span><div class="kpi-ico">🔴</div></div>
     <div class="kpi-val" id="k5">—</div>
     <div class="kpi-hint">sipariş &gt; SOL02</div>
   </div>
+</div>
+
+<!-- KPI DETAIL MODAL -->
+<div id="kpiOv" onclick="closeKpiModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;backdrop-filter:blur(2px)"></div>
+<div id="kpiModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:501;width:min(480px,92vw);max-height:80vh;background:var(--white);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden;display:none;flex-direction:column">
+  <div style="padding:20px 20px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div id="kpiModalIcon" style="font-size:20px;margin-bottom:4px"></div>
+      <div id="kpiModalTitle" style="font-size:15px;font-weight:700;color:var(--tx)"></div>
+      <div id="kpiModalSub" style="font-size:11px;color:var(--t2);margin-top:2px"></div>
+    </div>
+    <button onclick="closeKpiModal()" style="background:var(--bg);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--t2)">✕</button>
+  </div>
+  <div id="kpiModalBody" style="overflow-y:auto;padding:12px 16px 20px"></div>
 </div>
 
 <div class="section">
@@ -676,6 +690,76 @@ function loadBrands(){
   const sel=document.getElementById('bfilter');
   sel.innerHTML='<option value="">Tüm markalar</option>';
   brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;sel.appendChild(o);});
+}
+
+function showKpiDetail(type){
+  const modal=document.getElementById('kpiModal');
+  const ov=document.getElementById('kpiOv');
+  const icon=document.getElementById('kpiModalIcon');
+  const title=document.getElementById('kpiModalTitle');
+  const sub=document.getElementById('kpiModalSub');
+  const body=document.getElementById('kpiModalBody');
+  let rows=[];
+  if(type==='total'){
+    icon.textContent='📦';title.textContent='Stokta Ürün — Marka Dağılımı';
+    const brands={};
+    allData.filter(p=>p.sol02>0).forEach(p=>{brands[p.brand]=(brands[p.brand]||0)+1;});
+    const sorted=Object.entries(brands).sort((a,b)=>b[1]-a[1]);
+    sub.textContent=sorted.length+' marka';
+    body.innerHTML=sorted.map(([b,c])=>`
+      <div onclick="document.getElementById('bfilter').value='${b}';render();closeKpiModal()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:var(--bg);transition:background .1s" onmouseover="this.style.background='var(--goldbg)'" onmouseout="this.style.background='var(--bg)'">
+        <span style="font-size:13px;font-weight:500;color:var(--tx)">${b}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--gold)">${c} ürün</span>
+      </div>`).join('');
+  } else if(type==='sol02'){
+    icon.textContent='🏭';title.textContent='En Yüksek SOL02';
+    rows=allData.filter(p=>p.sol02>0).sort((a,b)=>b.sol02-a.sol02).slice(0,15);
+    sub.textContent='Top 15 ürün';
+    body.innerHTML=rows.map((p,i)=>`
+      <div onclick="openDrawer('${p.item}');hl('${p.item}');closeKpiModal()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:var(--bg)" onmouseover="this.style.background='var(--goldbg)'" onmouseout="this.style.background='var(--bg)'">
+        <span style="font-size:11px;font-weight:700;color:var(--t3);width:20px">#${i+1}</span>
+        <span style="flex:1;font-size:12px;color:var(--tx);line-height:1.3">${p.desc}</span>
+        <span style="font-size:14px;font-weight:800;color:var(--gold)">${fmt(p.sol02)}</span>
+      </div>`).join('');
+  } else if(type==='siparisler'){
+    icon.textContent='🛒';title.textContent='Aktif Siparişler';
+    rows=allData.filter(p=>p.cmt>0).sort((a,b)=>b.cmt-a.cmt).slice(0,15);
+    sub.textContent=allData.filter(p=>p.cmt>0).length+' ürün siparişte';
+    body.innerHTML=rows.map((p,i)=>`
+      <div onclick="openDrawer('${p.item}');hl('${p.item}');closeKpiModal()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:var(--bg)" onmouseover="this.style.background='var(--purbg)'" onmouseout="this.style.background='var(--bg)'">
+        <span style="font-size:11px;font-weight:700;color:var(--t3);width:20px">#${i+1}</span>
+        <span style="flex:1;font-size:12px;color:var(--tx);line-height:1.3">${p.desc}</span>
+        <span style="font-size:14px;font-weight:800;color:var(--pur)">${fmt(p.cmt)} kasa</span>
+      </div>`).join('');
+  } else if(type==='kritik'){
+    icon.textContent='⚠️';title.textContent='Kritik Stok';
+    rows=allData.filter(p=>stOf(p)==='crit').sort((a,b)=>a.sol02-b.sol02);
+    sub.textContent=rows.length+' ürün kritik seviyede';
+    body.innerHTML=rows.length?rows.map(p=>`
+      <div onclick="openDrawer('${p.item}');hl('${p.item}');closeKpiModal()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:var(--critbg)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+        <span style="flex:1;font-size:12px;color:var(--tx);line-height:1.3">${p.desc}</span>
+        <div style="text-align:right"><div style="font-size:14px;font-weight:800;color:var(--crit)">${fmt(p.sol02)}</div><div style="font-size:10px;color:var(--t3)">SOL02</div></div>
+      </div>`).join(''):'<p style="color:var(--ok);font-size:13px;padding:12px 0">Kritik stok yok!</p>';
+  } else if(type==='risk'){
+    icon.textContent='🔴';title.textContent='Tükenme Riski';
+    rows=allData.filter(p=>p.cmt>0&&p.cmt>p.sol02).sort((a,b)=>(b.cmt-b.sol02)-(a.cmt-a.sol02));
+    sub.textContent=rows.length+' ürün tükenmek üzere';
+    body.innerHTML=rows.length?rows.map(p=>`
+      <div onclick="openDrawer('${p.item}');hl('${p.item}');closeKpiModal()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:var(--critbg)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+        <span style="flex:1;font-size:12px;color:var(--tx);line-height:1.3">${p.desc}</span>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--crit);font-weight:700">${fmt(p.cmt)} sipariş</div>
+          <div style="font-size:11px;color:var(--t2)">${fmt(p.sol02)} SOL02</div>
+          <div style="font-size:10px;color:var(--crit)">-${fmt(p.cmt-p.sol02)} açık</div>
+        </div>
+      </div>`).join(''):'<p style="color:var(--ok);font-size:13px;padding:12px 0">Tükenme riski yok!</p>';
+  }
+  ov.style.display='block';
+  modal.style.display='flex';
+}
+function closeKpiModal(){
+  document.getElementById('kpiModal').style.display='none';
+  document.getElementById('kpiOv').style.display='none';
 }
 // initApp() appelé après login
 document.getElementById('fileInput').addEventListener('change',function(e){
