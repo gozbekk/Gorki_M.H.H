@@ -630,34 +630,48 @@ function renderCards(){
 function getProductImg(item,desc,brand){
   if(notes[item]&&notes[item].imageUrl)return notes[item].imageUrl;
   const d=desc.toLowerCase();
+  // ── HENNESSY ─────────────────────────────────────────────────────────────
   if(brand==='Hennessy'||d.includes('hennessy')||d.includes('hennesy')){
-    if(d.includes('richard'))return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Hennessy_Paradis.jpg/500px-Hennessy_Paradis.jpg';
-    if(d.includes('paradis'))return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Hennessy_Paradis.jpg/500px-Hennessy_Paradis.jpg';
-    if(d.includes(' xo')||d.includes('x.o'))return'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Cognac_Hennessy_XO.jpg/500px-Cognac_Hennessy_XO.jpg';
-    if(d.includes('vsop')||d.includes('v.s.o.p'))return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Hennessy_V.S.O.P.jpg/500px-Hennessy_V.S.O.P.jpg';
-    return'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Hennesy_XO_close.jpg/500px-Hennesy_XO_close.jpg';
+    if(d.includes('richard'))  return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Hennessy_Paradis.jpg/500px-Hennessy_Paradis.jpg';
+    if(d.includes('paradis'))  return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Hennessy_Paradis.jpg/500px-Hennessy_Paradis.jpg';
+    if(d.includes('xo')||d.includes('x.o')) return'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Cognac_Hennessy_XO.jpg/500px-Cognac_Hennessy_XO.jpg';
+    if(d.includes('vsop')||d.includes('v.s.o.p')) return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Hennessy_V.S.O.P.jpg/500px-Hennessy_V.S.O.P.jpg';
+    if(d.includes(' vs ')||d.includes('very special')) return'https://upload.wikimedia.org/wikipedia/commons/b/b3/Cognac_Hennessy_Very_Special.jpg';
+    return'https://upload.wikimedia.org/wikipedia/commons/d/d6/Hennessy_cognac_bottle_with_drinking_glass.JPG';
   }
+  // ── DOM PÉRIGNON ──────────────────────────────────────────────────────────
   if(brand==='Dom Pérignon'||d.includes('dom per')){
-    return'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Dom_Perignon_1999.jpg/500px-Dom_Perignon_1999.jpg';
+    if(d.includes('rose')||d.includes('rosé')) return'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Vintage_Dom_Perignon_%284025588425%29.jpg/500px-Vintage_Dom_Perignon_%284025588425%29.jpg';
+    if(d.includes('2012')) return'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Dom_P%C3%A9rignon_Champagne_2012.jpg/500px-Dom_P%C3%A9rignon_Champagne_2012.jpg';
+    return'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/DomPerignonChampagne.jpg/500px-DomPerignonChampagne.jpg';
   }
+  // ── MOËT & CHANDON ───────────────────────────────────────────────────────
   if(brand==='Moët & Chandon'||d.includes('moet')||d.includes('moët')){
-    return'https://upload.wikimedia.org/wikipedia/commons/b/b1/Mo%C3%ABt_%26_Chandon_in_different_sizes.jpg';
+    if(d.includes('vintage')||d.includes('millesime')||d.includes('millésime')) return'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Moet_2002_%286431180813%29.jpg/500px-Moet_2002_%286431180813%29.jpg';
+    return'https://upload.wikimedia.org/wikipedia/commons/b/b4/Moet_and_glass.jpg';
   }
+  // ── VEUVE CLICQUOT ───────────────────────────────────────────────────────
   if(brand==='Veuve Clicquot'||d.includes('veuve')||d.includes('clicquot')){
-    return'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Veuve_clicquot_bottle_sizes.jpg/500px-Veuve_clicquot_bottle_sizes.jpg';
+    if(d.includes('grande dame')) return'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Veuve_clicquot_bottle_sizes.jpg/500px-Veuve_clicquot_bottle_sizes.jpg';
+    return'https://upload.wikimedia.org/wikipedia/commons/5/58/Veuve_Clicquot_-_bottle.jpg';
   }
+  // ── KRUG ─────────────────────────────────────────────────────────────────
   if(brand==='Krug'||d.includes('krug')){
     return'https://upload.wikimedia.org/wikipedia/en/6/68/Bottle_of_Champagne_Krug.JPG';
   }
+  // ── RUINART ──────────────────────────────────────────────────────────────
   if(brand==='Ruinart'||d.includes('ruinart')){
     return'https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Bouteille_champagne_ruinart_1006884.jpg/500px-Bouteille_champagne_ruinart_1006884.jpg';
   }
+  // ── GLENMORANGIE ─────────────────────────────────────────────────────────
   if(brand==='Glenmorangie'||d.includes('glenmorangie')){
     return'https://upload.wikimedia.org/wikipedia/commons/c/c0/Glenmorangie_The_Original_whisky.jpg';
   }
+  // ── ARDBEG ───────────────────────────────────────────────────────────────
   if(brand==='Ardbeg'||d.includes('ardbeg')){
     return'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Ardbeg_Corryvreckan.jpg/500px-Ardbeg_Corryvreckan.jpg';
   }
+  // ── BELVÉDÈRE ────────────────────────────────────────────────────────────
   if(brand==='Belvédère'||d.includes('belvedere')||d.includes('belvédère')){
     return'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Belvedere_Vodka_02.tif/lossy-page1-500px-Belvedere_Vodka_02.tif.jpg';
   }
