@@ -392,12 +392,12 @@ thead th.has-filter{white-space:normal;}
   <div class="kpi" onclick="showKpiDetail('sol02')" style="cursor:pointer">
     <div class="kpi-top"><span class="kpi-lbl">Toplam SOL02</span><div class="kpi-ico">🏭</div></div>
     <div class="kpi-val" id="k2">—</div>
-    <div class="kpi-hint">mevcut kasa</div>
+    <div class="kpi-hint">mevcut şişe</div>
   </div>
   <div class="kpi c-pur" onclick="showKpiDetail('siparisler')" style="cursor:pointer">
     <div class="kpi-top"><span class="kpi-lbl">Toplam Sipariş</span><div class="kpi-ico">🛒</div></div>
     <div class="kpi-val" id="k3">—</div>
-    <div class="kpi-hint">sipariş edilen kasa</div>
+    <div class="kpi-hint">sipariş edilen şişe</div>
   </div>
   <div class="kpi c-red" onclick="showKpiDetail('kritik')" style="cursor:pointer">
     <div class="kpi-top"><span class="kpi-lbl">Kritik Stok</span><div class="kpi-ico">⚠️</div></div>
@@ -405,9 +405,9 @@ thead th.has-filter{white-space:normal;}
     <div class="kpi-hint">ortalamanın %20 altı</div>
   </div>
   <div class="kpi c-red" onclick="showKpiDetail('risk')" style="cursor:pointer">
-    <div class="kpi-top"><span class="kpi-lbl">Tükenme Riski</span><div class="kpi-ico">🔴</div></div>
+    <div class="kpi-top"><span class="kpi-lbl">Tükendi</span><div class="kpi-ico">🔴</div></div>
     <div class="kpi-val" id="k5">—</div>
-    <div class="kpi-hint">sipariş &gt; SOL02</div>
+    <div class="kpi-hint">stok bitti, sipariş karşılanamaz</div>
   </div>
 </div>
 
@@ -581,7 +581,7 @@ function renderCards(){
       <div class="card-head">
         <span class="card-rank" style="font-size:${podium?'18px':'11px'}">${podium?medals[i]:'#'+(i+1)}</span>
         <span class="card-mrk">${p.brand}</span>
-        ${risk?'<span class="card-warn">⚠ Tükenme</span>':''}
+        ${risk?'<span class="card-warn">⚠ Tükendi</span>':''}
       </div>
       <div class="card-desc">${p.desc}</div>
       <div style="margin-bottom:8px">
@@ -616,7 +616,7 @@ function openDrawer(item){
     ${tot?`<div class="dr-sec">
       <div class="dr-sec-t">Dağılım</div>
       <div class="ratio-box">
-        <div class="ratio-lbl">${fmt(tot)} toplam kasa</div>
+        <div class="ratio-lbl">${fmt(tot)} toplam şişe</div>
         <div class="ratio-track">
           ${pS?`<div class="rseg" style="width:${pS}%;background:var(--gold);color:#fff">${pS>10?'%'+pS:''}</div>`:''}
           ${pC?`<div class="rseg" style="width:${pC}%;background:var(--pur);color:#fff">${pC>10?'%'+pC:''}</div>`:''}
@@ -629,7 +629,7 @@ function openDrawer(item){
         </div>
       </div>
     </div>`:''}
-    ${risk?`<div class="alert-box">⚠️ <strong>${fmt(p.cmt)} sipariş</strong> var, ancak yalnızca <strong>${fmt(p.sol02)}</strong> SOL02 mevcut.<br>Açık: <strong>${fmt(p.cmt-p.sol02)} kasa</strong></div>`:''}
+    ${risk?`<div class="alert-box">⚠️ <strong>${fmt(p.cmt)} sipariş</strong> var, ancak yalnızca <strong>${fmt(p.sol02)}</strong> SOL02 mevcut.<br>Açık: <strong>${fmt(p.cmt-p.sol02)} şişe</strong></div>`:''}
   `;
   document.getElementById('drawer').classList.add('on');
   document.getElementById('ov').classList.add('on');
@@ -729,7 +729,7 @@ function showKpiDetail(type){
       <div onclick="openDrawer('${p.item}');hl('${p.item}');closeKpiModal()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:var(--bg)" onmouseover="this.style.background='var(--purbg)'" onmouseout="this.style.background='var(--bg)'">
         <span style="font-size:11px;font-weight:700;color:var(--t3);width:20px">#${i+1}</span>
         <span style="flex:1;font-size:12px;color:var(--tx);line-height:1.3">${p.desc}</span>
-        <span style="font-size:14px;font-weight:800;color:var(--pur)">${fmt(p.cmt)} kasa</span>
+        <span style="font-size:14px;font-weight:800;color:var(--pur)">${fmt(p.cmt)} şişe</span>
       </div>`).join('');
   } else if(type==='kritik'){
     icon.textContent='⚠️';title.textContent='Kritik Stok';
@@ -741,9 +741,9 @@ function showKpiDetail(type){
         <div style="text-align:right"><div style="font-size:14px;font-weight:800;color:var(--crit)">${fmt(p.sol02)}</div><div style="font-size:10px;color:var(--t3)">SOL02</div></div>
       </div>`).join(''):'<p style="color:var(--ok);font-size:13px;padding:12px 0">Kritik stok yok!</p>';
   } else if(type==='risk'){
-    icon.textContent='🔴';title.textContent='Tükenme Riski';
+    icon.textContent='🔴';title.textContent='Tükendi';
     rows=allData.filter(p=>p.cmt>0&&p.cmt>p.sol02).sort((a,b)=>(b.cmt-b.sol02)-(a.cmt-a.sol02));
-    sub.textContent=rows.length+' ürün tükenmek üzere';
+    sub.textContent=rows.length+' ürün stoku bitti';
     body.innerHTML=rows.length?rows.map(p=>`
       <div onclick="openDrawer('${p.item}');hl('${p.item}');closeKpiModal()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:var(--critbg)" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
         <span style="flex:1;font-size:12px;color:var(--tx);line-height:1.3">${p.desc}</span>
@@ -752,7 +752,7 @@ function showKpiDetail(type){
           <div style="font-size:11px;color:var(--t2)">${fmt(p.sol02)} SOL02</div>
           <div style="font-size:10px;color:var(--crit)">-${fmt(p.cmt-p.sol02)} açık</div>
         </div>
-      </div>`).join(''):'<p style="color:var(--ok);font-size:13px;padding:12px 0">Tükenme riski yok!</p>';
+      </div>`).join(''):'<p style="color:var(--ok);font-size:13px;padding:12px 0">Tükenen ürün yok!</p>';
   }
   ov.style.display='block';
   modal.style.display='flex';
