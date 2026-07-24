@@ -673,7 +673,7 @@ function render(){
       <td style="text-align:right;font-size:12px;color:var(--t2)">${p.cl?p.cl+'cl':'—'}</td>
       <td style="text-align:right"><div class="sval" style="color:var(--gold)">${fmt(p.sol02)}</div><div class="sbar"><div class="sbarf" style="width:${bPct}%;background:${bColor}"></div></div></td>
       <td style="text-align:right">${p.cmt?`<div class="cval" style="color:${risk?'var(--crit)':'var(--pur)'}">${fmt(p.cmt)}</div><div class="cbar"><div class="cbarf" style="width:${cPct}%;${risk?'background:var(--crit)':''}"></div></div>`:`<span style="color:var(--t3)">—</span>`}</td>
-      <td style="text-align:right">${(()=>{const net=p.sol02-p.cmt;return net>0?`<span style="font-size:13px;font-weight:700;color:var(--ok)">+${fmt(net)}</span>`:net<0?`<span style="font-size:13px;font-weight:700;color:var(--crit)">${fmt(net)}</span>`:`<span style="font-size:12px;color:var(--t3)">0</span>`;})()}</td>
+      <td style="text-align:right">${(()=>{const net=p.sol02-p.cmt;const col=net>0?'var(--ok)':net<0?'var(--crit)':'var(--t3)';const pct=mxS?Math.min(100,Math.round(Math.abs(net)/mxS*100)):0;return`<div class="sval" style="color:${col}">${net>0?'+':''}${fmt(net)}</div><div class="sbar"><div class="sbarf" style="width:${pct}%;background:${col}"></div></div>`;})()}</td>
       <td style="text-align:center">${p.sol02?`<span class="stbadge ${stCls(s)}"><span class="stdot"></span>${stLabel(s)}</span>`:`<span style="color:var(--t3)">—</span>`}</td>
     </tr>`;
   }).join('');
