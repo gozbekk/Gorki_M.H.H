@@ -379,6 +379,7 @@ thead th.has-filter{white-space:normal;}
       Excel Yükle
       <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
     </label>
+    <button id="visitorBtn" onclick="showVisitors()" style="display:none;background:var(--purbg);border:1px solid var(--purbr);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--pur);cursor:pointer;font-family:inherit">👁 Ziyaretçiler</button>
   </div>
 </header>
 
@@ -673,7 +674,7 @@ function render(){
       <td style="text-align:right;font-size:12px;color:var(--t2)">${p.cl?p.cl+'cl':'—'}</td>
       <td style="text-align:right"><div class="sval" style="color:var(--gold)">${fmt(p.sol02)}</div><div class="sbar"><div class="sbarf" style="width:${bPct}%;background:${bColor}"></div></div></td>
       <td style="text-align:right">${p.cmt?`<div class="cval" style="color:${risk?'var(--crit)':'var(--pur)'}">${fmt(p.cmt)}</div><div class="cbar"><div class="cbarf" style="width:${cPct}%;${risk?'background:var(--crit)':''}"></div></div>`:`<span style="color:var(--t3)">—</span>`}</td>
-      <td style="text-align:right">${(()=>{const net=p.sol02-p.cmt;const col=net>0?'var(--ok)':net<0?'var(--crit)':'var(--t3)';const pct=mxS?Math.min(100,Math.round(Math.abs(net)/mxS*100)):0;return`<div class="sval" style="color:${col}">${net>0?'+':''}${fmt(net)}</div><div class="sbar"><div class="sbarf" style="width:${pct}%;background:${col}"></div></div>`;})()}</td>
+      <td style="text-align:right">${(()=>{const net=p.sol02-p.cmt;const col=net<=0?'var(--crit)':s==='crit'?'var(--crit)':s==='warn'?'var(--warn)':'var(--ok)';const pct=mxS?Math.min(100,Math.round(Math.abs(net)/mxS*100)):0;return`<div class="sval" style="color:${col}">${net>0?'+':''}${fmt(net)}</div><div class="sbar"><div class="sbarf" style="width:${pct}%;background:${col}"></div></div>`;})()}</td>
       <td style="text-align:center">${p.sol02?`<span class="stbadge ${stCls(s)}"><span class="stdot"></span>${stLabel(s)}</span>`:`<span style="color:var(--t3)">—</span>`}</td>
     </tr>`;
   }).join('');
@@ -791,6 +792,7 @@ document.getElementById('fileInput').addEventListener('change',function(e){
       allData=nd;posmData=np;avg=getAvg();
       loadBrands();loadCl();renderCards();render();
       loadPosmFilters();
+      trackVisit('Ürün');
       const d=new Date();
       const months=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
       document.getElementById('hdrDate').textContent='Son güncelleme: '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
@@ -953,13 +955,50 @@ function adminTap(){
   if(++_taps>=5){
     _taps=0;
     const btn=document.getElementById('uploadBtn');
+    const vBtn=document.getElementById('visitorBtn');
     const visible=btn.style.display!=='none';
     btn.style.display=visible?'none':'';
+    vBtn.style.display=visible?'none':'';
     showToast(visible?'Yönetici modu kapatıldı':'🔑 Yönetici modu açıldı');
   }
 }
 
 
+
+function trackVisit(page='Ürün'){
+  fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page})}).catch(()=>{});
+}
+
+async function showVisitors(){
+  const modal=document.getElementById('kpiModal');
+  const ov=document.getElementById('kpiOv');
+  document.getElementById('kpiModalIcon').textContent='👁';
+  document.getElementById('kpiModalTitle').textContent='Ziyaretçiler';
+  document.getElementById('kpiModalSub').textContent='Yükleniyor…';
+  document.getElementById('kpiModalBody').innerHTML='<div style="text-align:center;padding:24px;color:var(--t3)">⟳ Yükleniyor…</div>';
+  ov.style.display='block'; modal.style.display='flex';
+  try{
+    const resp=await fetch('/api/logs',{headers:{Authorization:'Bearer MH2026'}});
+    const visits=await resp.json();
+    document.getElementById('kpiModalSub').textContent=visits.length+' ziyaret kaydedildi';
+    if(!visits.length){document.getElementById('kpiModalBody').innerHTML='<p style="color:var(--t3);padding:12px 0;font-size:13px">Henüz ziyaret kaydı yok.</p>';return;}
+    document.getElementById('kpiModalBody').innerHTML=visits.slice(0,100).map(v=>{
+      const d=new Date(v.t);
+      const dateStr=d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short'});
+      const timeStr=d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+      return`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg);margin-bottom:4px">
+        <div style="flex-shrink:0;text-align:center;min-width:44px">
+          <div style="font-size:11px;font-weight:700;color:var(--tx)">${timeStr}</div>
+          <div style="font-size:10px;color:var(--t3)">${dateStr}</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--tx)">${v.device} · ${v.os} · ${v.browser}</div>
+          <div style="font-size:10px;color:var(--t3)">IP: ${v.ip} · ${v.page||'—'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('kpiModalBody').innerHTML='<p style="color:var(--crit);font-size:13px">Hata: '+e.message+'</p>';}
+}
 
 function updateStaticBadge(){
   const badge=document.getElementById('updBadge');
