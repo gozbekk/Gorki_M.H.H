@@ -413,8 +413,8 @@ thead th.has-filter{white-space:normal;}
 
 <div class="section">
   <div class="sec-top">
-    <span class="sec-title">En Çok Stok</span>
-    <span class="sec-pill">SOL02'ye göre sıralı</span>
+    <span class="sec-title">En Çok Talep</span>
+    <span class="sec-pill">Siparişe göre sıralı</span>
   </div>
   <div class="cards" id="topCards"></div>
 </div>
@@ -555,24 +555,26 @@ function stCls(s){return s==='crit'?'st-crit':s==='warn'?'st-warn':'st-ok';}
 function applySort(){const v=document.getElementById('sortfilter').value,pts=v.split('-');sortDir=pts[pts.length-1]==='asc'?1:-1;sortCol=pts.slice(0,-1).join('-');render();}
 
 function renderCards(){
-  const top=allData.filter(p=>p.sol02>0).sort((a,b)=>b.sol02-a.sol02).slice(0,8);
+  const top=allData.filter(p=>p.cmt>0).sort((a,b)=>b.cmt-a.cmt).slice(0,8);
   const el=document.getElementById('topCards');
-  if(!top.length){el.innerHTML='<p style="font-size:12px;color:var(--t3);padding:4px 0">Stok verisi yok.</p>';return;}
-  const mx=top[0].sol02;
+  if(!top.length){el.innerHTML='<p style="font-size:12px;color:var(--t3);padding:4px 0">Devam eden sipariş yok.</p>';return;}
+  const mx=top[0].cmt;
+  const medals=['🥇','🥈','🥉'];
   el.innerHTML=top.map((p,i)=>{
-    const risk=p.cmt>0&&p.cmt>p.sol02;
-    return`<div class="card" onclick="openDrawer('${p.item}');hl('${p.item}')">
+    const risk=p.cmt>p.sol02;
+    const podium=i<3;
+    return`<div class="card${podium?' card-podium':''}" onclick="openDrawer('${p.item}');hl('${p.item}')" style="${podium?'border-color:'+(i===0?'#f59e0b':i===1?'#9ca3af':'#b45309')+'40;':''}" >
       <div class="card-head">
-        <span class="card-rank">#${i+1}</span>
+        <span class="card-rank" style="font-size:${podium?'18px':'11px'}">${podium?medals[i]:'#'+(i+1)}</span>
         <span class="card-mrk">${p.brand}</span>
-        ${risk?'<span class="card-warn">Tükenme</span>':''}
+        ${risk?'<span class="card-warn">⚠ Tükenme</span>':''}
       </div>
       <div class="card-desc">${p.desc}</div>
-      <div class="card-nums">
-        <div class="cn"><div class="cn-v" style="color:var(--gold)">${fmt(p.sol02)}</div><div class="cn-l">SOL02</div></div>
-        <div class="cn" style="text-align:right"><div class="cn-v" style="color:var(--pur)">${p.cmt?fmt(p.cmt):'—'}</div><div class="cn-l">sipariş</div></div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:22px;font-weight:800;color:var(--pur);line-height:1">${fmt(p.cmt)}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px">sipariş verildi</div>
       </div>
-      <div class="card-track"><div class="card-fill" style="width:${Math.round(p.sol02/mx*100)}%"></div></div>
+      <div class="card-track"><div class="card-fill" style="width:${Math.round(p.cmt/mx*100)}%"></div></div>
     </div>`;
   }).join('');
 }
