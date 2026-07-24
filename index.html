@@ -461,6 +461,7 @@ thead th.has-filter{white-space:normal;}
         <th class="r has-filter">CL<select id="clfilter" onchange="render()" class="col-filter"><option value="">Tümü</option></select></th>
         <th class="r has-filter" style="min-width:100px">SOL02<select id="sol02filter" onchange="render()" class="col-filter"><option value="">Tümü</option><option value="1">Stokta var</option><option value="100">≥ 100</option><option value="1000">≥ 1.000</option><option value="5000">≥ 5.000</option><option value="10000">≥ 10.000</option></select></th>
         <th class="r" style="min-width:100px">Sipariş</th>
+        <th class="r" style="min-width:100px">Net Stok</th>
         <th class="has-filter" style="text-align:center;min-width:100px">Durum<select id="stfilter" onchange="render()" class="col-filter"><option value="">Tümü</option><option value="ok">✓ İyi</option><option value="warn">⚠ Zayıf</option><option value="crit">✕ Kritik</option><option value="cmt">Siparişli</option></select></th>
       </tr></thead>
       <tbody id="tbody"></tbody>
@@ -672,6 +673,7 @@ function render(){
       <td style="text-align:right;font-size:12px;color:var(--t2)">${p.cl?p.cl+'cl':'—'}</td>
       <td style="text-align:right"><div class="sval" style="color:var(--gold)">${fmt(p.sol02)}</div><div class="sbar"><div class="sbarf" style="width:${bPct}%;background:${bColor}"></div></div></td>
       <td style="text-align:right">${p.cmt?`<div class="cval" style="color:${risk?'var(--crit)':'var(--pur)'}">${fmt(p.cmt)}</div><div class="cbar"><div class="cbarf" style="width:${cPct}%;${risk?'background:var(--crit)':''}"></div></div>`:`<span style="color:var(--t3)">—</span>`}</td>
+      <td style="text-align:right">${(()=>{const net=p.sol02-p.cmt;return net>0?`<span style="font-size:13px;font-weight:700;color:var(--ok)">+${fmt(net)}</span>`:net<0?`<span style="font-size:13px;font-weight:700;color:var(--crit)">${fmt(net)}</span>`:`<span style="font-size:12px;color:var(--t3)">0</span>`;})()}</td>
       <td style="text-align:center">${p.sol02?`<span class="stbadge ${stCls(s)}"><span class="stdot"></span>${stLabel(s)}</span>`:`<span style="color:var(--t3)">—</span>`}</td>
     </tr>`;
   }).join('');
