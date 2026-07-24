@@ -302,6 +302,24 @@ html.dark .theme-toggle-knob{transform:translateX(24px);}
 .b-vo{background:#f0fdf4;color:#14532d;}.b-vo .bdot{background:#15803d;}
 .b-xx{background:#f9fafb;color:#6b7280;}.b-xx .bdot{background:#9ca3af;}
 
+/* NOTES */
+.note-box{background:#fefce8;border:1.5px solid #fde047;border-radius:10px;padding:14px 16px;margin-bottom:12px;}
+.note-box-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.note-box-icon{font-size:16px;}
+.note-box-lbl{font-size:11px;font-weight:700;color:#854d0e;text-transform:uppercase;letter-spacing:.4px;}
+.note-box-date{font-size:10px;color:#a16207;margin-left:auto;}
+.note-box-text{font-size:13px;color:#713f12;line-height:1.5;font-weight:500;}
+html.dark .note-box{background:#1c1a05;border-color:#854d0e;}
+html.dark .note-box-lbl{color:#fde047;}
+html.dark .note-box-text{color:#fef08a;}
+html.dark .note-box-date{color:#ca8a04;}
+.note-admin-area{margin-bottom:12px;}
+.note-textarea{width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;color:var(--tx);background:var(--white);resize:vertical;min-height:80px;outline:none;transition:border-color .15s;}
+.note-textarea:focus{border-color:var(--pur);}
+.note-save-btn{background:var(--pur);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;}
+.note-del-btn{background:var(--critbg);color:var(--crit);border:1px solid var(--critbr);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;margin-left:6px;}
+.has-note{font-size:11px;margin-left:4px;}
+
 /* COL FILTERS */
 .col-filter{
   display:block;width:100%;margin-top:5px;
@@ -562,6 +580,12 @@ function isPosm(i){return /^[2T]/i.test(i);}
 const BC={'Moët & Chandon':'b-mc','Chandon':'b-ch','Veuve Clicquot':'b-vc','Hennessy':'b-hn','Dom Pérignon':'b-dp','Krug':'b-kr','Ruinart':'b-ru','Belvédère':'b-bv','Glenmorangie':'b-gn','Ardbeg':'b-ar','Cloudy Bay':'b-cb','Armand de Brignac':'b-ad','Château Minuty':'b-mn',"Château d'Esclans":'b-es','Eminente':'b-em','Volcán de mi Tierra':'b-vo'};
 function bc(b){return BC[b]||'b-xx';}
 let allData=[];
+let notes={};
+let _adminMode=false;
+
+async function loadNotes(){
+  try{const r=await fetch('/api/notes',{cache:'no-store'});if(r.ok)notes=await r.json();}catch(_){}
+}
 const getAvg=()=>{const d=allData.filter(p=>p.sol02>0);return d.reduce((s,p)=>s+p.sol02,0)/(d.length||1);};
 let avg=getAvg(),sortCol='sol02',sortDir=-1;
 const fmt=n=>n.toLocaleString('tr-TR');
@@ -632,9 +656,56 @@ function openDrawer(item){
       </div>
     </div>`:''}
     ${risk?`<div class="alert-box">⚠️ <strong>${fmt(p.cmt)} sipariş</strong> var, ancak yalnızca <strong>${fmt(p.sol02)}</strong> SOL02 mevcut.<br>Açık: <strong>${fmt(p.cmt-p.sol02)} şişe</strong></div>`:''}
+    ${renderNoteSection(item)}
   `;
   document.getElementById('drawer').classList.add('on');
   document.getElementById('ov').classList.add('on');
+}
+
+function renderNoteSection(item){
+  const note=notes[item];
+  const dateStr=note?new Date(note.date).toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+  const noteHtml=note?`
+    <div class="note-box">
+      <div class="note-box-header">
+        <span class="note-box-icon">📌</span>
+        <span class="note-box-lbl">Yönetici Notu</span>
+        <span class="note-box-date">${dateStr}</span>
+      </div>
+      <div class="note-box-text">${note.text.replace(/\n/g,'<br>')}</div>
+    </div>`:'';
+  if(!_adminMode) return noteHtml;
+  return`${noteHtml}
+    <div class="note-admin-area">
+      <div style="font-size:11px;font-weight:700;color:var(--pur);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">📝 Not Ekle / Düzenle</div>
+      <textarea class="note-textarea" id="noteInput_${item}" placeholder="Örn: Bu ürün 15 Ağustos'ta stoka girecek…">${note?note.text:''}</textarea>
+      <div>
+        <button class="note-save-btn" onclick="saveNote('${item}')">Kaydet</button>
+        ${note?`<button class="note-del-btn" onclick="deleteNote('${item}')">Sil</button>`:''}
+      </div>
+    </div>`;
+}
+
+async function saveNote(item){
+  const ta=document.getElementById('noteInput_'+item);
+  if(!ta||!ta.value.trim()){showToast('Not boş olamaz');return;}
+  const btn=ta.nextElementSibling.querySelector('.note-save-btn');
+  btn.textContent='Kaydediliyor…';btn.disabled=true;
+  try{
+    const r=await fetch('/api/notes',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer MH2026'},body:JSON.stringify({item,text:ta.value.trim()})});
+    const d=await r.json();
+    if(d.success){notes=d.notes;showToast('✅ Not kaydedildi!');openDrawer(item);}
+    else showToast('⚠ Hata: '+d.error);
+  }catch(e){showToast('⚠ Bağlantı hatası');}
+}
+
+async function deleteNote(item){
+  if(!confirm('Bu notu silmek istediğinizden emin misiniz?'))return;
+  try{
+    const r=await fetch('/api/notes',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer MH2026'},body:JSON.stringify({item,text:''})});
+    const d=await r.json();
+    if(d.success){notes=d.notes;showToast('Not silindi');openDrawer(item);}
+  }catch(e){showToast('⚠ Bağlantı hatası');}
 }
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('ov').classList.remove('on');}
 function copyItem(item,btn){navigator.clipboard.writeText(item).then(()=>{btn.textContent='✓';btn.classList.add('copied');showToast('Kopyalandı: '+item);setTimeout(()=>{btn.textContent='⎘';btn.classList.remove('copied');},1800);});}
@@ -668,7 +739,7 @@ function render(){
     const bColor=s==='crit'?'var(--crit)':s==='warn'?'var(--warn)':'var(--gold)';
     const risk=p.cmt>0&&p.cmt>p.sol02;
     return`<tr data-item="${p.item}" onclick="openDrawer('${p.item}')">
-      <td><div class="item-wrap"><span class="ino">${p.item}</span><button class="cpbtn" onclick="event.stopPropagation();copyItem('${p.item}',this)">⎘</button></div></td>
+      <td><div class="item-wrap"><span class="ino">${p.item}</span>${notes[p.item]?`<span class="has-note" title="Not var">📝</span>`:''}<button class="cpbtn" onclick="event.stopPropagation();copyItem('${p.item}',this)">⎘</button></div></td>
       <td><div class="dtxt">${p.desc}</div></td>
       <td><span class="btag ${bc(p.brand)}"><span class="bdot"></span>${p.brand}</span></td>
       <td style="text-align:right;font-size:12px;color:var(--t2)">${p.cl?p.cl+'cl':'—'}</td>
@@ -951,6 +1022,7 @@ async function doLogin(){
     localStorage.setItem('mh-session',Date.now());
     localStorage.setItem('mh-pwd',pwd);
     document.getElementById('loginScreen').style.display='none';
+    await loadNotes();
     loadBrands();loadCl();renderCards();render();
     loadPosmFilters();
     trackVisit('Ürün');
@@ -974,6 +1046,7 @@ function adminTap(){
     const btn=document.getElementById('uploadBtn');
     const vBtn=document.getElementById('visitorBtn');
     const visible=btn.style.display!=='none';
+    _adminMode=!visible;
     btn.style.display=visible?'none':'';
     vBtn.style.display=visible?'none':'';
     showToast(visible?'Yönetici modu kapatıldı':'🔑 Yönetici modu açıldı');
@@ -1137,6 +1210,7 @@ setInterval(updateBadgeTick, 60000);
         allData=JSON.parse(rawStr);
         posmData=JSON.parse(posmStr);
         avg=getAvg();
+        await loadNotes();
         loadBrands();loadCl();renderCards();render();
         loadPosmFilters();
         trackVisit('Ürün');
